@@ -1,0 +1,78 @@
+name: Go CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  GO_VERSION: "1.26.x"
+  CGO_ENABLED: 1
+
+jobs:
+  test:
+    name: Test changed Go packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Find changed Go package directories
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --no-tags --depth=1 origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+            git diff --name-only "origin/${{ github.base_ref }}...HEAD" > changed_files.txt
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            git ls-tree -r --name-only HEAD > changed_files.txt
+          else
+            git diff --name-only "${{ github.event.before }}...${{ github.sha }}" > changed_files.txt
+          fi
+
+          while IFS= read -r file; do
+            case "$file" in
+              *.go) dirname "$file" ;;
+            esac
+          done < changed_files.txt | sort -u > unique_test_dirs.txt
+
+          if [ -s unique_test_dirs.txt ]; then
+            echo "Changed Go package directories:"
+            cat unique_test_dirs.txt
+          else
+            echo "No changed Go files found."
+          fi
+
+      - name: Run tests for changed packages
+        run: |
+          if [ ! -s unique_test_dirs.txt ]; then
+            echo "No changed Go packages to test."
+            exit 0
+          fi
+
+          while IFS= read -r test_dir; do
+            if [ ! -d "$test_dir" ]; then
+              echo "Skipping $test_dir: directory does not exist in this revision."
+              continue
+            fi
+            if find "$test_dir" -maxdepth 1 -name "*_test.go" -type f | grep -q .; then
+              echo "Testing $test_dir"
+              go test -v "./$test_dir"
+            else
+              echo "Skipping $test_dir: no package-local test files."
+            fi
+          done < unique_test_dirs.txt

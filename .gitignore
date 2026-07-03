@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editors and local agent settings
+.idea/
+.vscode/
+.metals/
+.claude/settings.local.json
+
+# Go build and test artifacts
+bin/
+pkg/
+*.test
+*.out
+coverage.out
+coverage.html
+/**/debug
+/**/debug.test
+/**/*.out
+/**/*.in
+
+# Temporary files
+tmp/
+temp/
+*.tmp

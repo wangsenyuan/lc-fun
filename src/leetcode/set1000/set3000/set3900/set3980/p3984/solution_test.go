@@ -1,55 +1,29 @@
-package p3981
+package p3984
 
 import "testing"
 
-func runSample(t *testing.T, word1 string, word2 string, target string, expect int) {
-	res := interleaveCharacters(word1, word2, target)
+func runSample(t *testing.T, nums []int, expect int) {
+	res := divisibleGame(nums)
+
 	if res != expect {
-		t.Errorf("Sample expect %d, but got %d", expect, res)
+		t.Fatalf("Sample expect %d, but got %d", expect, res)
 	}
 }
 
 func TestSample1(t *testing.T) {
-	word1 := "abc"
-	word2 := "bac"
-	target := "abc"
-	expect := 5
-
-	runSample(t, word1, word2, target, expect)
+	nums := []int{1, 4, 6, 8}
+	expect := 36
+	runSample(t, nums, expect)
 }
 
 func TestSample2(t *testing.T) {
-	word1 := "cd"
-	word2 := "cd"
-	target := "ccd"
-	expect := 4
-
-	runSample(t, word1, word2, target, expect)
+	nums := []int{2, 1, 2}
+	expect := 6
+	runSample(t, nums, expect)
 }
 
 func TestSample3(t *testing.T) {
-	word1 := "xy"
-	word2 := "xy"
-	target := "xyxy"
-	expect := 2
-
-	runSample(t, word1, word2, target, expect)
-}
-
-func TestSample4(t *testing.T) {
-	word1 := "ab"
-	word2 := "cde"
-	target := "ade"
-	expect := 1
-
-	runSample(t, word1, word2, target, expect)
-}
-
-func TestSkipBeforeFirstMatch(t *testing.T) {
-	word1 := "xa"
-	word2 := "b"
-	target := "ab"
-	expect := 1
-
-	runSample(t, word1, word2, target, expect)
+	nums := []int{1}
+	expect := 1000000005
+	runSample(t, nums, expect)
 }

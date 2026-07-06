@@ -1,60 +1,45 @@
-package p3980
+package p3983
 
-const inf = 1 << 60
+import "slices"
 
-func minOperations(s1 string, s2 string) int {
-	n := len(s1)
-	dp := [2]int{inf, inf}
-	dp[int(s1[0]-'0')] = 0
+func canMakeSubsequence(s string, t string) bool {
+	// dp[i] = s[:i]能匹配的最短的t的前缀
 
-	for i := 0; i < n; i++ {
-		target := int(s2[i] - '0')
-
-		if i == n-1 {
-			ans := inf
-			for cur, cost := range dp {
-				if cost >= inf {
-					continue
-				}
-				if target == 0 {
-					if cur == 0 {
-						ans = min(ans, cost)
-					}
-				} else {
-					ans = min(ans, cost+1-cur)
-				}
+	play := func(s string, t string) []int {
+		n := len(s)
+		var j int
+		dp := make([]int, n)
+		for i, x := range s {
+			for j < len(t) && rune(t[j]) != x {
+				j++
 			}
-			if ans >= inf {
-				return -1
-			}
-			return ans
+			j = min(j+1, len(t))
+			dp[i] = j
 		}
-
-		nextOrig := int(s1[i+1] - '0')
-		ndp := [2]int{inf, inf}
-
-		for cur, cost := range dp {
-			if cost >= inf {
-				continue
-			}
-
-			if target == 0 {
-				if cur == 0 {
-					ndp[nextOrig] = min(ndp[nextOrig], cost)
-				}
-			} else {
-				ndp[nextOrig] = min(ndp[nextOrig], cost+1-cur)
-			}
-
-			pairCost := 1 + 1 - cur + 1 - nextOrig
-			if target == 1 {
-				pairCost++
-			}
-			ndp[0] = min(ndp[0], cost+pairCost)
+		return dp
+	}
+	dp := play(s, t)
+	fp := play(reverse(s), reverse(t))
+	slices.Reverse(fp)
+	n := len(s)
+	for i := range n {
+		var l, r int
+		if i > 0 {
+			l = dp[i-1]
 		}
-
-		dp = ndp
+		if i+1 < n {
+			r = fp[i+1]
+		}
+		if l+r+1 <= len(t) {
+			return true
+		}
 	}
 
-	return -1
+	return false
+}
+
+func reverse(s string) string {
+	buf := []byte(s)
+	slices.Reverse(buf)
+	return string(buf)
 }

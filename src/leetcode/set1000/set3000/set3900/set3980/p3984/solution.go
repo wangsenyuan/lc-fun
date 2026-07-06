@@ -1,74 +1,72 @@
-package p3981
+package p3984
 
-func interleaveCharacters(word1 string, word2 string, target string) int {
-	n := len(word1)
-	m := len(word2)
+import "slices"
 
-	const mod = 1e9 + 7
+func divisibleGame(nums []int) int {
+	mx := slices.Max(nums)
+	lpf := make([]int, mx+1)
+	var primes []int
+	for i := 2; i <= mx; i++ {
+		if lpf[i] == 0 {
+			lpf[i] = i
+			primes = append(primes, i)
+		}
 
-	dp := make([][]int, n+1)
-	for i := range dp {
-		dp[i] = make([]int, m+1)
-	}
-
-	dp[0][0] = 1
-
-	for _, c := range target {
-		rowPrefix := make([][]int, n+1)
-		for i := range rowPrefix {
-			rowPrefix[i] = make([]int, m+1)
-			for j := 0; j <= m; j++ {
-				rowPrefix[i][j] = dp[i][j]
-				if i > 0 {
-					rowPrefix[i][j] = (rowPrefix[i][j] + rowPrefix[i-1][j]) % mod
-				}
+		for _, p := range primes {
+			if i*p > mx {
+				break
 			}
-		}
-
-		colPrefix := make([][]int, n+1)
-		for i := range colPrefix {
-			colPrefix[i] = make([]int, m+1)
-			for j := 0; j <= m; j++ {
-				colPrefix[i][j] = dp[i][j]
-				if j > 0 {
-					colPrefix[i][j] = (colPrefix[i][j] + colPrefix[i][j-1]) % mod
-				}
-			}
-		}
-
-		ndp := make([][]int, n+1)
-		for i := range ndp {
-			ndp[i] = make([]int, m+1)
-		}
-
-		for i := 0; i < n; i++ {
-			if rune(word1[i]) == c {
-				for j := 0; j <= m; j++ {
-					ndp[i+1][j] = (ndp[i+1][j] + rowPrefix[i][j]) % mod
-				}
-			}
-		}
-
-		for j := 0; j < m; j++ {
-			if rune(word2[j]) == c {
-				for i := 0; i <= n; i++ {
-					ndp[i][j+1] = (ndp[i][j+1] + colPrefix[i][j]) % mod
-				}
-			}
-		}
-
-		dp = ndp
-	}
-
-	var ans int
-
-	for i := range n + 1 {
-		for j := range m + 1 {
-			if i > 0 && j > 0 {
-				ans = (ans + dp[i][j]) % mod
+			lpf[i*p] = p
+			if i%p == 0 {
+				break
 			}
 		}
 	}
 
-	return ans
+	mark := make([]int, mx+1)
+
+	best := -(1 << 60)
+	k := 1
+	for i, v := range nums {
+		if v == 1 {
+			if best < -v {
+				best = -v
+				k = 2
+			}
+			continue
+		}
+		// 如果区间以i开始
+		var fs []int
+		for u := v; u > 1; u /= lpf[u] {
+			x := lpf[u]
+			if mark[x] == 0 {
+				fs = append(fs, x)
+			}
+			mark[x]++
+		}
+
+		sum := make([]int, len(fs))
+
+		for j := i; j < len(nums); j++ {
+			for w, x := range fs {
+				if nums[j]%x == 0 {
+					sum[w] += nums[j]
+				} else {
+					sum[w] -= nums[j]
+				}
+				if sum[w] > best || sum[w] == best && x < k {
+					best = sum[w]
+					k = x
+				}
+			}
+		}
+
+		for _, x := range fs {
+			mark[x] = 0
+		}
+	}
+
+	best = (best + 1_000_000_007) % 1_000_000_007
+
+	return best * k % 1_000_000_007
 }

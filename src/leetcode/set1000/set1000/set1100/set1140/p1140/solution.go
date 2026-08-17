@@ -5,6 +5,10 @@ func stoneGameII(piles []int) int {
 	// dp[0][1] is result
 
 	n := len(piles)
+	if n == 1 {
+		return piles[0]
+	}
+
 	dp := make([][]int, n)
 	for i := 0; i < n; i++ {
 		dp[i] = make([]int, (n+1)/2)
@@ -45,11 +49,4 @@ func stoneGameII(piles []int) int {
 	}
 
 	return loop(0, 1)
-}
-
-func max(a, b int) int {
-	if a >= b {
-		return a
-	}
-	return b
 }

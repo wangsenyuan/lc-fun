@@ -31,7 +31,6 @@ func validSubarrays(nums []int, k int, queries [][]int) []bool {
 
 	f1 := make(map[uint64]int)
 	f2 := make(map[uint64]int)
-	cnt := make(map[uint64]int)
 
 	ans := make([]bool, len(queries))
 
@@ -49,7 +48,6 @@ func validSubarrays(nums []int, k int, queries [][]int) []bool {
 				f1[w]++
 				break
 			}
-			cnt[sum[l1]]++
 			l1++
 		}
 		for len(f2) > k {
@@ -62,7 +60,6 @@ func validSubarrays(nums []int, k int, queries [][]int) []bool {
 				f2[w]++
 				break
 			}
-			cnt[sum[l2]]--
 			l2++
 		}
 

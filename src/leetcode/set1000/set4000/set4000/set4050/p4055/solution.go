@@ -1,53 +1,51 @@
 package p4055
 
 import (
-	"math/bits"
 	"slices"
 	"sort"
 )
 
-func shadowPairs(nums []int) int {
-	arr := slices.Clone(nums)
-	slices.Sort(arr)
-	arr = slices.Compact(arr)
-
-	for i, v := range nums {
-		nums[i] = sort.SearchInts(arr, v)
+func solve(a []int, low, high int) (res int) {
+	n := len(a)
+	if n <= 1 || low == high {
+		return
 	}
-	m := len(arr)
-	mp := bits.Len(uint(m)) - 1
-	var res int
 
-	for p := mp; p >= 0; p-- {
-		tot := 1 << (mp - p)
-		small := make([][]int, tot)
-		big := make([][]int, tot)
-		for i, v := range nums {
-			g := v >> (p + 1)
-			flag := (v >> p) & 1
-			if flag > 0 {
-				for len(big[g]) > 0 && nums[last(big[g])] >= v {
-					big[g] = big[g][:len(big[g])-1]
-				}
-				lim := -1
-				if len(big[g]) > 0 {
-					lim = last(big[g])
-				}
-				big[g] = append(big[g], i)
-				j := sort.SearchInts(small[g], lim)
-				res += len(small[g]) - j
-			} else {
-				for len(small[g]) > 0 && nums[last(small[g])] < v {
-					small[g] = small[g][:len(small[g])-1]
-				}
-				small[g] = append(small[g], i)
+	var lowSt, highSt, b, c []int
+	mid := (low + high) / 2
+
+	for i, x := range a {
+		if x <= mid { // x 在下部，作为 nums[i]
+			for len(lowSt) > 0 && a[lowSt[len(lowSt)-1]] < x {
+				lowSt = lowSt[:len(lowSt)-1] // 因为 x 的出现，栈顶不能作为 nums[i]
 			}
+			lowSt = append(lowSt, i)
+			b = append(b, x)
+		} else { // x 在上部，作为 nums[j]
+			// 找到 x 左侧第一个小于 x 的最近元素，作为 nums[k]
+			for len(highSt) > 0 && a[highSt[len(highSt)-1]] >= x {
+				highSt = highSt[:len(highSt)-1]
+			}
+			res += len(lowSt)
+			if len(highSt) > 0 {
+				// lowSt 中 < highSt[len(highSt)-1] 的下标不能作为 nums[i]
+				res -= sort.SearchInts(lowSt, highSt[len(highSt)-1])
+			}
+			highSt = append(highSt, i)
+			c = append(c, x)
 		}
 	}
 
-	return res
+	return res + solve(b, low, mid) + solve(c, mid+1, high)
 }
 
-func last(arr []int) int {
-	return arr[len(arr)-1]
+func shadowPairs(nums []int) int {
+	sorted := slices.Clone(nums)
+	slices.Sort(sorted)
+	sorted = slices.Compact(sorted)
+	for i, x := range nums {
+		nums[i] = sort.SearchInts(sorted, x)
+	}
+
+	return solve(nums, 0, len(sorted)-1)
 }
